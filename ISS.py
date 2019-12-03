@@ -1,3 +1,4 @@
+#Import the necessary libraries
 import requests
 import json
 import time
@@ -5,6 +6,7 @@ import sys
 from geopy.geocoders import Nominatim
 from datetime import datetime
 
+#Dictionary variable for inputting coordinates for ISS passtimes
 parameters = {
     'lat': None,
     'lon': None,
