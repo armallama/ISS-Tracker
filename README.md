@@ -1,5 +1,8 @@
-# hello-world
-Place for fun and games
+# ISS-Tracker
+
+A program that finds the current coordinates for the International Space Station.
+
+It also allows users to input coordinates to determine the next 5 times the ISS will pass.
 
 
 Add new branch to separate the master branch
