@@ -133,8 +133,8 @@ class PassTimeDialog(wx.Dialog):
             passTimeLog.append("No entry\n")
         elif float(self.latitude.GetValue()) > 90 or float(self.latitude.GetValue()) < -90:
             passTimeLog.append("Enter the latitude between -90 and 90\n")
-        elif float(self.longitude.GetValue()) > 80 or float(self.longitude.GetValue()) < -180:
-            passTimeLog.append("Enter the longitude between -180 and 80\n")
+        elif float(self.longitude.GetValue()) > 180 or float(self.longitude.GetValue()) < -180:
+            passTimeLog.append("Enter the longitude between -180 and 180\n")
         else:
             try:
                 parameters = {'lat': float(self.latitude.GetValue()), 'lon': float(self.longitude.GetValue()), 'alt': float(self.altitude.GetValue())}
