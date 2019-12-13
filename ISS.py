@@ -1,6 +1,5 @@
 #Import the necessary libraries
 import requests
-import json
 import time
 import sys
 import wx
@@ -14,22 +13,24 @@ parameters = {
     'alt': None
 }
 
-passTimeLog = []
-responsePass = None
 
-geolocator = Nominatim(user_agent="BBISS")
+passTimeLog = [] #List variable for adding the passtimes
+
+geolocator = Nominatim(user_agent="BBISS") #geolocator accessing class Nominatim for location support
 
 class MainMenu(wx.Frame):
 
+
+    #Main Menu GUI setup
     def __init__(self):
         super(MainMenu, self).__init__(parent=None, title = 'ISSpy', size=(750,400))
         panel = wx.Panel(self)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         menu = wx.FlexGridSizer(2,2, 9, 25)
 
-        self.loc_text = wx.TextCtrl(panel, style = wx.TE_MULTILINE|wx.TE_READONLY)
+        self.loc_text = wx.TextCtrl(panel, style = wx.TE_MULTILINE|wx.TE_READONLY) 
         self.pass_text = wx.TextCtrl(panel, style = wx.TE_MULTILINE|wx.TE_READONLY)
-        current_loc = wx.Button(panel, label="Current")
+        current_loc = wx.Button(panel, label="Current Location")
         pass_time = wx.Button(panel, label="Pass Times")
 
         menu.AddMany([(current_loc), (self.loc_text, 1, wx.EXPAND),
@@ -39,14 +40,14 @@ class MainMenu(wx.Frame):
         menu.AddGrowableRow(1,0)
         menu.AddGrowableCol(1,0)
 
-        
         current_loc.Bind(wx.EVT_BUTTON, self.locPrint)
         pass_time.Bind(wx.EVT_BUTTON, self.passPrint)
 
         hbox.Add(menu, proportion=1, flag=wx.ALL|wx.EXPAND, border=15)
         panel.SetSizer(hbox)
         self.Show(True) 
-        
+
+    #Define the output for current location    
     def locPrint(self, event):
 
         responseLoc = requests.get("http://api.open-notify.org/iss-now.json")
@@ -64,37 +65,18 @@ class MainMenu(wx.Frame):
 
         self.loc_text.WriteText(current_location+"\n")
 
-
+    #Define the output for next passtimes
     def passPrint(self, event):
         PassTimeDialog(self).ShowModal()
         for x in range(len(passTimeLog)):
             self.pass_text.WriteText(passTimeLog[x]+"\n")
-
-        # print("Example coordinates are latitude: 40.71, Longitude: -74 (New York City)")
-        # lat = input("Enter latitude: ")
-        # lon = input("Enter longitude: ")
-        # alt = input("Enter Altitude (meters): ")
-        # try:
-        # 	coordinates = geolocator.reverse(lat + "," + lon, language = "en")
-        # except:
-        # 	print('Something went wrong')
-        # 	main()
-
-        # print("\n" +coordinates.raw['display_name']+"\n")
+        passTimeLog.clear()
 
 
-        # parameters = {'lat': float(lat), 'lon': float(lon), 'alt': float(alt)}
-
-
-        # responsePass = requests.get("http://api.open-notify.org/iss-pass.json", params=parameters)
-        # passTimes = responsePass.json()['response']
-        # for x in passTimes:
-        # 	time = datetime.fromtimestamp(x['risetime'])
-        # 	duration = x['duration']
-        # 	print(time, duration)
-
-
+#Dialog GUI for entering coordinates for passtinmes
 class PassTimeDialog(wx.Dialog):
+
+    #Menu setup
     def __init__(self, parent):
         super(PassTimeDialog, self).__init__(parent, title = "Enter Coordinates", size = (250,250))
         panel = wx.Panel(self)
@@ -141,23 +123,37 @@ class PassTimeDialog(wx.Dialog):
         cancelButton.Bind(wx.EVT_BUTTON, self.onCancel)
         okButton.Bind(wx.EVT_BUTTON, self.onOk)
 
+    #If cancel is pressed
     def onCancel(self, event):
         self.Destroy()
     
+    #If coordinates are entered
     def onOk(self, event):
-        parameters = {'lat': float(self.latitude.GetValue()), 'lon': float(self.longitude.GetValue()), 'alt': float(self.altitude.GetValue())}
-        passCoordinates = geolocator.reverse(self.latitude.GetValue() + "," + self.longitude.GetValue(), language = "en")
+        if self.latitude.GetValue() == "" and self.longitude.GetValue() == "":
+            passTimeLog.append("No entry\n")
+        elif float(self.latitude.GetValue()) > 90 or float(self.latitude.GetValue()) < -90:
+            passTimeLog.append("Enter the latitude between -90 and 90\n")
+        elif float(self.longitude.GetValue()) > 80 or float(self.longitude.GetValue()) < -180:
+            passTimeLog.append("Enter the longitude between -180 and 80\n")
+        else:
+            try:
+                parameters = {'lat': float(self.latitude.GetValue()), 'lon': float(self.longitude.GetValue()), 'alt': float(self.altitude.GetValue())}
+                passCoordinates = geolocator.reverse(self.latitude.GetValue() + "," + self.longitude.GetValue(), language = "en")
 
-        responsePass = requests.get("http://api.open-notify.org/iss-pass.json", params=parameters)
+                responsePass = requests.get("http://api.open-notify.org/iss-pass.json", params=parameters)
 
-        passTimeLog.append(passCoordinates.raw['display_name']+"\n")
+                if passCoordinates.raw != {'error': 'Unable to geocode'}:
+                    passTimeLog.append(passCoordinates.raw['display_name']+"\n")
+                else:
+                    passTimeLog.append("No Address \n")
 
-        passTimes = responsePass.json()['response']
-        for x in passTimes:
-            time = datetime.fromtimestamp(x['risetime']).strftime("%x %X")
-            duration = str(x['duration'])
-            passTimeLog.append(time+" "+duration+" Seconds")
-        
+                passTimes = responsePass.json()['response']
+                for x in passTimes:
+                    time = datetime.fromtimestamp(x['risetime']).strftime("%x %X")
+                    duration = str(x['duration'])
+                    passTimeLog.append(time+" "+duration+" Seconds")
+            except:
+                passTimeLog.append("The ISS does not pass through this coordinate")
         self.Destroy()
 
 
