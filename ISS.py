@@ -16,7 +16,7 @@ parameters = {
 
 passTimeLog = [] #List variable for adding the passtimes
 
-geolocator = Nominatim(user_agent="BBISS") #geolocator accessing class Nominatim for location support
+geolocator = Nominatim(user_agent="") #ADD a user agent name. geolocator accessing class Nominatim for location support
 
 class MainMenu(wx.Frame):
 
