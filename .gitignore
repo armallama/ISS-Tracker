@@ -1,0 +1,11 @@
+__pycache__/
+
+.vscode/
+
+launch.json
+
+settings.json
+
+build/
+
+dist/
